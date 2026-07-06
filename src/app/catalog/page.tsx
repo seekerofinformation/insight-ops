@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { CatalogView } from "@/modules/catalog/components/catalog-view";
 
 export const metadata: Metadata = { title: "Dataset Catalog" };
 
 export default function CatalogPage() {
   return (
-    <section>
-      <h1 className="text-xl font-semibold">Dataset Catalog</h1>
-      <p className="text-muted mt-2 text-sm">
-        Discover datasets by domain, source type, quality and access level.
-      </p>
-    </section>
+    // Suspense boundary is required by useSearchParams during prerender
+    <Suspense>
+      <CatalogView />
+    </Suspense>
   );
 }
