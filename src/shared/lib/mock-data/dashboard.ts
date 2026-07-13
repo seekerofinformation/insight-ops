@@ -1,25 +1,6 @@
-export interface DashboardMetrics {
-  datasets: number;
-  activePipelines: number;
-  failedJobs: number;
-  /** 0–100 */
-  avgDataQuality: number;
-  anomaliesDetected: number;
-  liveEvents: number;
-}
+import type { DashboardMetrics, DashboardTrends } from "@insightops/contracts";
 
-export interface TrendPoint {
-  /** Label on the X axis, e.g. "Mon" or "09:00" */
-  label: string;
-  value: number;
-}
-
-export interface DashboardTrends {
-  /** Events processed per day, last 7 days */
-  eventActivity: TrendPoint[];
-  /** Average data quality per day, last 7 days */
-  qualityTrend: TrendPoint[];
-}
+export type { DashboardMetrics, DashboardTrends, TrendPoint } from "@insightops/contracts";
 
 export const MOCK_DASHBOARD_METRICS: DashboardMetrics = {
   datasets: 24,

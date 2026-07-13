@@ -13,6 +13,7 @@ const nextConfig: NextConfig = isGithubPages
     }
   : {
       output: "standalone",
+      transpilePackages: ["@insightops/contracts"],
     };
 
 export default nextConfig;

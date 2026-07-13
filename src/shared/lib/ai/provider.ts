@@ -1,34 +1,18 @@
-import type { Dataset, DatasetSchema, DataQualityMetrics } from "@/shared/types";
+import type {
+  AiDatasetContext,
+  ExplainDatasetResult,
+  GenerateSqlInput,
+  GenerateSqlResult,
+  SqlResultPreview,
+} from "@insightops/contracts";
 
-/** Compact context object — never the full dataset (data minimization). */
-export interface AiDatasetContext {
-  dataset: Dataset;
-  schema: DatasetSchema;
-  quality?: DataQualityMetrics;
-}
-
-export interface GenerateSqlInput {
-  context: AiDatasetContext;
-  prompt: string;
-}
-
-export interface SqlResultPreview {
-  columns: string[];
-  rows: (string | number)[][];
-}
-
-export interface GenerateSqlResult {
-  sql: string;
-  explanation: string;
-  preview: SqlResultPreview;
-}
-
-export interface ExplainDatasetResult {
-  summary: string;
-  recommendations: string[];
-  /** 0–1 */
-  confidence: number;
-}
+export type {
+  AiDatasetContext,
+  ExplainDatasetResult,
+  GenerateSqlInput,
+  GenerateSqlResult,
+  SqlResultPreview,
+};
 
 /**
  * Provider abstraction: the app depends on this contract, not on a vendor.
