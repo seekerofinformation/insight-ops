@@ -1,0 +1,319 @@
+openapi: 3.1.1
+info:
+  title: InsightOps API
+  version: 1.0.0-draft
+  description: Contract baseline for the modular-monolith REST API.
+servers:
+  - url: /v1
+paths:
+  /datasets:
+    get:
+      summary: List datasets
+      responses:
+        "200": { $ref: "#/components/responses/Datasets" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /datasets/{datasetId}:
+    parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+    get:
+      summary: Get a dataset
+      responses:
+        "200": { $ref: "#/components/responses/Dataset" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /datasets/{datasetId}/schema:
+    parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+    get:
+      summary: Get dataset schema
+      responses:
+        "200": { $ref: "#/components/responses/DatasetSchema" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /datasets/{datasetId}/quality:
+    parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+    get:
+      summary: Get data-quality metrics
+      responses:
+        "200": { $ref: "#/components/responses/Quality" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /datasets/{datasetId}/rows:
+    parameters: [{ $ref: "#/components/parameters/DatasetId" }]
+    get:
+      summary: List dataset rows
+      parameters:
+        [
+          {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100000, default: 30000 },
+          },
+        ]
+      responses:
+        "200": { $ref: "#/components/responses/Rows" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /pipelines:
+    get:
+      summary: List pipelines
+      responses:
+        "200": { $ref: "#/components/responses/Pipelines" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /pipelines/{pipelineId}:
+    parameters: [{ name: pipelineId, in: path, required: true, schema: { type: string } }]
+    get:
+      summary: Get a pipeline
+      responses:
+        "200": { $ref: "#/components/responses/Pipeline" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /dashboard/metrics:
+    get:
+      summary: Get dashboard metrics
+      responses:
+        "200": { $ref: "#/components/responses/DashboardMetrics" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /dashboard/trends:
+    get:
+      summary: Get dashboard trends
+      responses:
+        "200": { $ref: "#/components/responses/DashboardTrends" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /alerts:
+    get:
+      summary: List alerts
+      parameters:
+        [
+          {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 8 },
+          },
+        ]
+      responses:
+        "200": { $ref: "#/components/responses/Alerts" }
+        default: { $ref: "#/components/responses/ApiError" }
+  /events:
+    get:
+      summary: Subscribe to monitoring events
+      description: SSE stream. Use Last-Event-ID for reconnects; reload resource state through REST after reconnecting.
+      responses:
+        "200":
+          description: text/event-stream
+          content: { text/event-stream: { schema: { type: string } } }
+        default: { $ref: "#/components/responses/ApiError" }
+components:
+  parameters:
+    DatasetId: { name: datasetId, in: path, required: true, schema: { type: string } }
+  headers:
+    RequestId:
+      { description: Opaque request correlation UUID, schema: { type: string, format: uuid } }
+  responses:
+    Datasets:
+      {
+        description: OK,
+        headers: { X-Request-Id: { $ref: "#/components/headers/RequestId" } },
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/DatasetListResponse" } } },
+      }
+    Dataset:
+      {
+        description: OK,
+        headers: { X-Request-Id: { $ref: "#/components/headers/RequestId" } },
+        content: { application/json: { schema: { $ref: "#/components/schemas/DatasetResponse" } } },
+      }
+    DatasetSchema:
+      {
+        description: OK,
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/DatasetSchemaResponse" } } },
+      }
+    Quality:
+      {
+        description: OK,
+        content: { application/json: { schema: { $ref: "#/components/schemas/QualityResponse" } } },
+      }
+    Rows:
+      {
+        description: OK,
+        content: { application/json: { schema: { $ref: "#/components/schemas/RowsResponse" } } },
+      }
+    Pipelines:
+      {
+        description: OK,
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/PipelineListResponse" } } },
+      }
+    Pipeline:
+      {
+        description: OK,
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/PipelineResponse" } } },
+      }
+    DashboardMetrics:
+      {
+        description: OK,
+        content:
+          {
+            application/json: { schema: { $ref: "#/components/schemas/DashboardMetricsResponse" } },
+          },
+      }
+    DashboardTrends:
+      {
+        description: OK,
+        content:
+          {
+            application/json: { schema: { $ref: "#/components/schemas/DashboardTrendsResponse" } },
+          },
+      }
+    Alerts:
+      {
+        description: OK,
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/AlertListResponse" } } },
+      }
+    ApiError:
+      {
+        description: Error,
+        headers: { X-Request-Id: { $ref: "#/components/headers/RequestId" } },
+        content: { application/json: { schema: { $ref: "#/components/schemas/ApiError" } } },
+      }
+  schemas:
+    DatasetListResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { type: array, items: { $ref: "#/components/schemas/Dataset" } } },
+      }
+    DatasetResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/Dataset" } },
+      }
+    DatasetSchemaResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/DatasetSchema" } },
+      }
+    QualityResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/Quality" } },
+      }
+    RowsResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { type: array, items: { type: object, additionalProperties: true } } },
+      }
+    PipelineListResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { type: array, items: { $ref: "#/components/schemas/Pipeline" } } },
+      }
+    PipelineResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/Pipeline" } },
+      }
+    DashboardMetricsResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/DashboardMetrics" } },
+      }
+    DashboardTrendsResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { $ref: "#/components/schemas/DashboardTrends" } },
+      }
+    AlertListResponse:
+      {
+        type: object,
+        required: [data],
+        properties: { data: { type: array, items: { $ref: "#/components/schemas/Alert" } } },
+      }
+    Dataset:
+      {
+        type: object,
+        required:
+          [
+            id,
+            name,
+            domain,
+            sourceType,
+            owner,
+            rowCount,
+            qualityScore,
+            freshness,
+            sensitivity,
+            accessLevel,
+            tags,
+            updatedAt,
+          ],
+        additionalProperties: true,
+      }
+    DatasetSchema: { type: object, required: [datasetId, columns], additionalProperties: true }
+    Quality:
+      {
+        type: object,
+        required:
+          [
+            datasetId,
+            qualityScore,
+            missingValuesPct,
+            duplicateRows,
+            invalidRecords,
+            freshnessScore,
+            schemaConsistencyScore,
+            anomalyScore,
+          ],
+      }
+    Pipeline:
+      {
+        type: object,
+        required: [id, name, status, nodes, edges, updatedAt],
+        additionalProperties: true,
+      }
+    DashboardMetrics:
+      {
+        type: object,
+        required:
+          [datasets, activePipelines, failedJobs, avgDataQuality, anomaliesDetected, liveEvents],
+      }
+    DashboardTrends: { type: object, required: [eventActivity, qualityTrend] }
+    Alert: { type: object, required: [id, severity, title, description, source, timestamp, status] }
+    ApiError:
+      type: object
+      required: [error, requestId]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              {
+                type: string,
+                enum:
+                  [
+                    VALIDATION_ERROR,
+                    UNAUTHORIZED,
+                    FORBIDDEN,
+                    NOT_FOUND,
+                    CONFLICT,
+                    RATE_LIMITED,
+                    INTERNAL_ERROR,
+                  ],
+              }
+            message: { type: string }
+            details:
+              {
+                type: array,
+                items:
+                  {
+                    type: object,
+                    required: [path, message],
+                    properties: { path: { type: string }, message: { type: string } },
+                  },
+              }
+        requestId: { type: string, format: uuid }

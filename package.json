@@ -2,6 +2,10 @@
   "name": "insightops",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,6 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "contracts:typecheck": "tsc --noEmit --project packages/contracts/tsconfig.json",
     "prepare": "husky"
   },
   "lint-staged": {

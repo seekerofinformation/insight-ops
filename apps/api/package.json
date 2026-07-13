@@ -1,0 +1,9 @@
+{
+  "name": "@insightops/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --input-type=module -e \"console.log('API scaffold ready')\""
+  }
+}
