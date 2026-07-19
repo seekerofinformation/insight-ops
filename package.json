@@ -7,15 +7,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "next dev",
-    "build": "npm run --workspace=@insightops/contracts build && next build",
+    "build:packages": "npm run --workspace=@insightops/contracts build && npm run --workspace=@insightops/fixtures build",
+    "dev": "npm run build:packages && next dev",
+    "build": "npm run build:packages && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit && npm run --workspace=@insightops/contracts typecheck && npm run --workspace=@insightops/api typecheck",
-    "test": "vitest run",
+    "typecheck": "npm run build:packages && tsc --noEmit && npm run --workspace=@insightops/contracts typecheck && npm run --workspace=@insightops/fixtures typecheck && npm run --workspace=@insightops/api typecheck && npm run --workspace=@insightops/api prisma:seed:check",
+    "test": "npm run build:packages && vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "contracts:typecheck": "tsc --noEmit --project packages/contracts/tsconfig.json",
@@ -31,6 +32,7 @@
     ]
   },
   "dependencies": {
+    "@insightops/fixtures": "0.1.0",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-dialog": "^1.1.18",
     "@radix-ui/react-dropdown-menu": "^2.1.19",

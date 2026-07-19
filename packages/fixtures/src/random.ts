@@ -1,6 +1,6 @@
 /**
  * Deterministic PRNG (mulberry32). Mock data must be stable between
- * renders and reloads so demos and tests are reproducible.
+ * consumers and runs so demos, seeds and tests are reproducible.
  */
 export function createRng(seed: number) {
   let state = seed;

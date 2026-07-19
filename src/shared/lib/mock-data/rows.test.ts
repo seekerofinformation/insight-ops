@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { MOCK_DATASETS, MOCK_QUALITY, MOCK_SCHEMAS } from "./datasets";
-import { generateRows } from "./rows";
-import { createRng, seedFromString } from "./random";
+import {
+  MOCK_DATASETS,
+  MOCK_QUALITY,
+  MOCK_SCHEMAS,
+  createRng,
+  generateRows,
+  seedFromString,
+} from "@insightops/fixtures";
 
 describe("mock data integrity", () => {
   it("has a schema and quality metrics for every dataset", () => {

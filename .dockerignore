@@ -3,11 +3,12 @@ node_modules
 apps/api/dist
 apps/api/src/generated
 packages/contracts/dist
+packages/fixtures/dist
 .git
 coverage
 playwright-report
 .env*
 !.env.example
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
 README.md

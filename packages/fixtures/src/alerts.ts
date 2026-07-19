@@ -1,5 +1,5 @@
-import type { Alert, Severity } from "@/shared/types";
-import { createRng, pick, randomInt, type Rng } from "./random";
+import type { Alert, Severity } from "@insightops/contracts";
+import { createRng, pick, randomInt, type Rng } from "./random.js";
 
 interface AlertTemplate {
   severity: Severity;

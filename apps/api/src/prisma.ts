@@ -1,12 +1,9 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client.js";
+import { readRequiredSecret } from "./config/read-secret.js";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL must be set to start the API service");
-}
+const databaseUrl = readRequiredSecret("DATABASE_URL");
 
 const adapter = new PrismaPg({ connectionString: databaseUrl });
 

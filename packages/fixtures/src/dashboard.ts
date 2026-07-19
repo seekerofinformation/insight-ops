@@ -1,6 +1,5 @@
-import type { DashboardMetrics, DashboardTrends } from "@insightops/contracts";
-
 export type { DashboardMetrics, DashboardTrends, TrendPoint } from "@insightops/contracts";
+import type { DashboardMetrics, DashboardTrends } from "@insightops/contracts";
 
 export const MOCK_DASHBOARD_METRICS: DashboardMetrics = {
   datasets: 24,

@@ -1,30 +1,28 @@
-name: insightops
+name: insightops-dev
 
 services:
   insightops:
     build: .
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
     depends_on:
       api:
         condition: service_healthy
     restart: unless-stopped
 
   api:
-    image: insightops-api:production
+    image: insightops-api:dev
     build:
       context: .
       dockerfile: apps/api/Dockerfile
       target: runtime
     environment:
-      DATABASE_URL_FILE: /run/secrets/app_database_url
+      DATABASE_URL: ${APP_DATABASE_URL:?APP_DATABASE_URL must be set with postgres as the host}
       API_HOST: 0.0.0.0
       API_PORT: 4000
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-    secrets:
-      - app_database_url
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     ports:
-      - "${API_PORT:-4000}:4000"
+      - "127.0.0.1:${API_PORT:-4000}:4000"
     depends_on:
       api-migrate:
         condition: service_completed_successfully
@@ -50,16 +48,14 @@ services:
     restart: unless-stopped
 
   api-migrate:
-    image: insightops-api-migration:production
+    image: insightops-api-migration:dev
     build:
       context: .
       dockerfile: apps/api/Dockerfile
       target: migration
     environment:
-      MIGRATION_DATABASE_URL_FILE: /run/secrets/migration_database_url
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:?MIGRATION_DATABASE_URL must be set with postgres as the host}
       APP_DATABASE_ROLE: ${POSTGRES_APP_USER:?POSTGRES_APP_USER must be set}
-    secrets:
-      - migration_database_url
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,18 +73,14 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
       POSTGRES_USER: ${POSTGRES_ADMIN_USER:?POSTGRES_ADMIN_USER must be set}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD must be set}
       POSTGRES_MIGRATOR_USER: ${POSTGRES_MIGRATOR_USER:?POSTGRES_MIGRATOR_USER must be set}
-      POSTGRES_MIGRATOR_PASSWORD_FILE: /run/secrets/postgres_migrator_password
+      POSTGRES_MIGRATOR_PASSWORD: ${POSTGRES_MIGRATOR_PASSWORD:?POSTGRES_MIGRATOR_PASSWORD must be set}
       POSTGRES_APP_USER: ${POSTGRES_APP_USER:?POSTGRES_APP_USER must be set}
-      POSTGRES_APP_PASSWORD_FILE: /run/secrets/postgres_app_password
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD must be set}
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
-    secrets:
-      - postgres_admin_password
-      - postgres_migrator_password
-      - postgres_app_password
-    expose:
-      - "5432"
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
@@ -101,15 +93,3 @@ services:
 
 volumes:
   postgres_data:
-
-secrets:
-  app_database_url:
-    file: ${APP_DATABASE_URL_SECRET_FILE:?APP_DATABASE_URL_SECRET_FILE must point to a secret file}
-  migration_database_url:
-    file: ${MIGRATION_DATABASE_URL_SECRET_FILE:?MIGRATION_DATABASE_URL_SECRET_FILE must point to a secret file}
-  postgres_admin_password:
-    file: ${POSTGRES_ADMIN_PASSWORD_SECRET_FILE:?POSTGRES_ADMIN_PASSWORD_SECRET_FILE must point to a secret file}
-  postgres_migrator_password:
-    file: ${POSTGRES_MIGRATOR_PASSWORD_SECRET_FILE:?POSTGRES_MIGRATOR_PASSWORD_SECRET_FILE must point to a secret file}
-  postgres_app_password:
-    file: ${POSTGRES_APP_PASSWORD_SECRET_FILE:?POSTGRES_APP_PASSWORD_SECRET_FILE must point to a secret file}

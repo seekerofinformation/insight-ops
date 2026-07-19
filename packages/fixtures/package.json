@@ -1,0 +1,23 @@
+{
+  "name": "@insightops/fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@insightops/contracts": "file:../contracts"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

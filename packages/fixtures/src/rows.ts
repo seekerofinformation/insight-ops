@@ -1,5 +1,5 @@
-import type { DatasetColumn, DatasetSchema } from "@/shared/types";
-import { createRng, pick, randomFloat, randomInt, seedFromString, type Rng } from "./random";
+import type { DatasetColumn, DatasetSchema } from "@insightops/contracts";
+import { createRng, pick, randomFloat, randomInt, seedFromString, type Rng } from "./random.js";
 
 /** A single row of a mock dataset; keys match the dataset schema columns. */
 export type DatasetRow = Record<string, string | number | boolean | null>;

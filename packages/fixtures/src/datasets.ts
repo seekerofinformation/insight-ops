@@ -1,4 +1,4 @@
-import type { DataQualityMetrics, Dataset, DatasetSchema } from "@/shared/types";
+import type { DataQualityMetrics, Dataset, DatasetSchema } from "@insightops/contracts";
 
 export const MOCK_DATASETS: Dataset[] = [
   {
