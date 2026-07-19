@@ -1,19 +1,33 @@
 #!/bin/sh
 set -eu
 
+if [ -n "${POSTGRES_MIGRATOR_PASSWORD_FILE:-}" ]; then
+  POSTGRES_MIGRATOR_PASSWORD="$(cat "$POSTGRES_MIGRATOR_PASSWORD_FILE")"
+fi
+if [ -n "${POSTGRES_APP_PASSWORD_FILE:-}" ]; then
+  POSTGRES_APP_PASSWORD="$(cat "$POSTGRES_APP_PASSWORD_FILE")"
+fi
+
+: "${POSTGRES_MIGRATOR_USER:?POSTGRES_MIGRATOR_USER must be set}"
+: "${POSTGRES_MIGRATOR_PASSWORD:?POSTGRES_MIGRATOR_PASSWORD or POSTGRES_MIGRATOR_PASSWORD_FILE must be set}"
+: "${POSTGRES_APP_USER:?POSTGRES_APP_USER must be set}"
+: "${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD or POSTGRES_APP_PASSWORD_FILE must be set}"
+
 psql \
   --username "$POSTGRES_USER" \
   --dbname "$POSTGRES_DB" \
   --set=ON_ERROR_STOP=1 \
+  --set=migrator_role="$POSTGRES_MIGRATOR_USER" \
   --set=migrator_password="$POSTGRES_MIGRATOR_PASSWORD" \
+  --set=app_role="$POSTGRES_APP_USER" \
   --set=app_password="$POSTGRES_APP_PASSWORD" \
   --set=database_name="$POSTGRES_DB" <<'SQL'
-CREATE ROLE insightops_migrator LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT PASSWORD :'migrator_password';
-CREATE ROLE insightops_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT PASSWORD :'app_password';
+CREATE ROLE :"migrator_role" LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT PASSWORD :'migrator_password';
+CREATE ROLE :"app_role" LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT PASSWORD :'app_password';
 
-GRANT CONNECT ON DATABASE :"database_name" TO insightops_migrator, insightops_app;
-GRANT CREATE ON DATABASE :"database_name" TO insightops_migrator;
-GRANT USAGE, CREATE ON SCHEMA public TO insightops_migrator;
-GRANT USAGE ON SCHEMA public TO insightops_app;
+GRANT CONNECT ON DATABASE :"database_name" TO :"migrator_role", :"app_role";
+GRANT CREATE ON DATABASE :"database_name" TO :"migrator_role";
+GRANT USAGE, CREATE ON SCHEMA public TO :"migrator_role";
+GRANT USAGE ON SCHEMA public TO :"app_role";
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 SQL

@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/contracts/package.json ./packages/contracts/package.json
+COPY packages/fixtures/package.json ./packages/fixtures/package.json
 RUN npm ci
 
 # --- build ---

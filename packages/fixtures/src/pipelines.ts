@@ -1,4 +1,4 @@
-import type { Pipeline } from "@/shared/types";
+import type { Pipeline } from "@insightops/contracts";
 
 export const MOCK_PIPELINES: Pipeline[] = [
   {

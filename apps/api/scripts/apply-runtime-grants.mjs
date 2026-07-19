@@ -1,7 +1,16 @@
 import pg from "pg";
+import { readFileSync } from "node:fs";
 
 const { Client } = pg;
-const databaseUrl = process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL;
+
+function readSecret(name) {
+  const filePath = process.env[`${name}_FILE`];
+  const directValue = process.env[name];
+  if (filePath && directValue) throw new Error(`${name} and ${name}_FILE are mutually exclusive`);
+  return (filePath ? readFileSync(filePath, "utf8") : directValue)?.trim() || undefined;
+}
+
+const databaseUrl = readSecret("MIGRATION_DATABASE_URL") ?? readSecret("DATABASE_URL");
 const appRole = process.env.APP_DATABASE_ROLE;
 
 if (!databaseUrl) {
