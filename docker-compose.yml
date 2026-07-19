@@ -5,4 +5,85 @@ services:
       - "3000:3000"
     env_file:
       - .env.local
+    depends_on:
+      api:
+        condition: service_healthy
     restart: unless-stopped
+  api:
+    image: insightops-api:local
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    environment:
+      DATABASE_URL: ${APP_DATABASE_URL:-postgresql://insightops_app:insightops_app@postgres:5432/insightops?schema=public}
+      API_HOST: 0.0.0.0
+      API_PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "4000:4000"
+    depends_on:
+      api-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health/live').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+  api-migrate:
+    image: insightops-api-migration:local
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migration
+    environment:
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:-postgresql://insightops_migrator:insightops_migrator@postgres:5432/insightops?schema=public}
+      APP_DATABASE_ROLE: ${APP_DATABASE_ROLE:-insightops_app}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: "no"
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: insightops
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-insightops_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-insightops_admin}
+      POSTGRES_MIGRATOR_PASSWORD: ${POSTGRES_MIGRATOR_PASSWORD:-insightops_migrator}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:-insightops_app}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-insightops_admin} -d insightops"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

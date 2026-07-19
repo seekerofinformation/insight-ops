@@ -5,7 +5,7 @@ import {
   datasetSchema,
   datasetStructureSchema,
   pipelineSchema,
-} from "./domain";
+} from "./domain.js";
 
 export const listDatasetsResponseSchema = z.object({ data: z.array(datasetSchema) });
 export const getDatasetResponseSchema = z.object({ data: datasetSchema });

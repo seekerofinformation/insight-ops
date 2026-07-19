@@ -81,6 +81,27 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The app runs entirely on mock data — no environment variables or API keys are required for local development.
 
+### Backend infrastructure
+
+The stage-one backend is a separate Fastify workspace backed by PostgreSQL and Prisma. Start the local stack with `docker compose up --build`; it exposes the frontend at `:3000`, the API at `:4000`, and PostgreSQL at `:5432`. A one-shot `api-migrate` service applies committed Prisma migrations before the API starts.
+
+Database privileges are split by responsibility: `insightops_migrator` owns schema changes, while `insightops_app` receives only runtime DML privileges and cannot access Prisma's migration history table. Production deployments should run the same `prisma:deploy:with-grants` command as a dedicated CI/CD or orchestrator job before rolling out API replicas.
+
+The API Dockerfile has separate `runtime` and `migration` targets. The runtime target contains only compiled API code and production dependencies; Prisma CLI and build tools remain in the migration/build targets. Both containers run as UID/GID `10001`, with a read-only root filesystem, all Linux capabilities dropped and `no-new-privileges` enabled by Compose.
+
+PostgreSQL initialization scripts only run for a new data volume. If the disposable local volume predates the separate database roles, recreate that volume before starting the updated stack. For a persistent environment, provision the two roles manually instead of deleting its volume.
+
+`GET /health/live` reports process liveness. `GET /health/ready` checks the PostgreSQL connection and returns `503` until the database is available. JSON request logs include the Fastify request ID; callers may provide one through `X-Request-Id`.
+
+For local Prisma work, copy `.env.example` to `.env` (or provide `DATABASE_URL`), then use:
+
+```bash
+npm run --workspace=@insightops/api prisma:migrate
+npm run --workspace=@insightops/api prisma:seed
+```
+
+The seed reads the existing deterministic frontend mock fixtures, so catalog metadata, pipelines and alerts remain aligned with the UI demo.
+
 ### Scripts
 
 | Script                            | Description                      |

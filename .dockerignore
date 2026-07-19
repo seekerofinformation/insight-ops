@@ -1,5 +1,8 @@
 node_modules
 .next
+apps/api/dist
+apps/api/src/generated
+packages/contracts/dist
 .git
 coverage
 playwright-report

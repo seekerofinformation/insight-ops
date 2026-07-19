@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DatasetDomain {
+  SMART_CITY    @map("Smart City")
+  ENERGY        @map("Energy")
+  FINANCE       @map("Finance")
+  PUBLIC_SAFETY @map("Public Safety")
+  IOT           @map("IoT")
+}
+
+enum DatasetSourceType {
+  API
+  CSV
+  DATABASE @map("Database")
+  STREAM   @map("Stream")
+  DATA_LAKE @map("Data Lake")
+}
+
+enum DatasetSensitivity {
+  LOW    @map("Low")
+  MEDIUM @map("Medium")
+  HIGH   @map("High")
+}
+
+enum DatasetAccessLevel {
+  OPEN       @map("Open")
+  RESTRICTED @map("Restricted")
+  PRIVATE    @map("Private")
+}
+
+enum ColumnType {
+  STRING   @map("string")
+  NUMBER   @map("number")
+  BOOLEAN  @map("boolean")
+  DATETIME @map("datetime")
+}
+
+enum PipelineStatus {
+  IDLE    @map("idle")
+  RUNNING @map("running")
+  SUCCESS @map("success")
+  FAILED  @map("failed")
+}
+
+enum PipelineNodeType {
+  SOURCE         @map("source")
+  CLEANING       @map("cleaning")
+  FILTER         @map("filter")
+  JOIN           @map("join")
+  VALIDATION     @map("validation")
+  TRANSFORMATION @map("transformation")
+  ANOMALY        @map("anomaly")
+  OUTPUT         @map("output")
+}
+
+enum PipelineNodeStatus {
+  IDLE    @map("idle")
+  RUNNING @map("running")
+  SUCCESS @map("success")
+  WARNING @map("warning")
+  FAILED  @map("failed")
+}
+
+enum AlertSeverity {
+  INFO     @map("info")
+  WARNING  @map("warning")
+  CRITICAL @map("critical")
+}
+
+enum AlertStatus {
+  NEW          @map("new")
+  ACKNOWLEDGED @map("acknowledged")
+  RESOLVED     @map("resolved")
+}
+
+model Dataset {
+  id          String             @id
+  name        String
+  description String
+  domain      DatasetDomain
+  sourceType  DatasetSourceType
+  owner       String
+  rowCount    Int
+  qualityScore Float
+  freshness   String
+  sensitivity DatasetSensitivity
+  accessLevel DatasetAccessLevel
+  tags        String[]
+  updatedAt   DateTime
+  columns     DatasetColumn[]
+  quality     DatasetQuality?
+
+  @@index([updatedAt])
+}
+
+model DatasetColumn {
+  id          String     @id @default(cuid())
+  datasetId   String
+  name        String
+  type        ColumnType
+  nullable    Boolean
+  description String?
+  dataset     Dataset    @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  @@unique([datasetId, name])
+}
+
+model DatasetQuality {
+  datasetId               String  @id
+  qualityScore            Float
+  missingValuesPct        Float
+  duplicateRows           Int
+  invalidRecords          Int
+  freshnessScore          Float
+  schemaConsistencyScore  Float
+  anomalyScore            Float
+  dataset                 Dataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+}
+
+model Pipeline {
+  id          String         @id
+  name        String
+  description String
+  status      PipelineStatus
+  lastRunAt   DateTime?
+  updatedAt   DateTime
+  nodes       PipelineNode[]
+  edges       PipelineEdge[]
+
+  @@index([updatedAt])
+}
+
+model PipelineNode {
+  id            String             @id @default(cuid())
+  pipelineId    String
+  nodeId        String
+  type          PipelineNodeType
+  label         String
+  status        PipelineNodeStatus
+  rowsProcessed Int?
+  durationMs    Int?
+  config        Json?
+  pipeline      Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@unique([pipelineId, nodeId])
+}
+
+model PipelineEdge {
+  id         String   @id @default(cuid())
+  pipelineId String
+  edgeId     String
+  source     String
+  target     String
+  pipeline   Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@unique([pipelineId, edgeId])
+}
+
+model Alert {
+  id          String        @id
+  severity    AlertSeverity
+  title       String
+  description String
+  source      String
+  timestamp   DateTime
+  status      AlertStatus
+
+  @@index([timestamp])
+}
