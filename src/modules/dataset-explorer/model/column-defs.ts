@@ -1,6 +1,6 @@
 import type { ColDef } from "ag-grid-community";
 import type { DatasetSchema } from "@/shared/types";
-import type { DatasetRow } from "@/shared/lib/mock-data";
+import type { DatasetRow } from "@insightops/contracts";
 
 function toHeaderName(name: string): string {
   return name.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());

@@ -61,6 +61,28 @@ export function CatalogFiltersPanel({ filters, onChange, onReset }: CatalogFilte
       </select>
 
       <select
+        value={filters.sortBy}
+        onChange={(e) => onChange({ sortBy: e.target.value as CatalogFilters["sortBy"] })}
+        aria-label="Sort datasets by"
+        className={selectClass}
+      >
+        <option value="updatedAt">Recently updated</option>
+        <option value="name">Name</option>
+        <option value="qualityScore">Quality</option>
+        <option value="rowCount">Row count</option>
+      </select>
+
+      <select
+        value={filters.sortOrder}
+        onChange={(e) => onChange({ sortOrder: e.target.value as CatalogFilters["sortOrder"] })}
+        aria-label="Sort direction"
+        className={selectClass}
+      >
+        <option value="desc">Descending</option>
+        <option value="asc">Ascending</option>
+      </select>
+
+      <select
         value={filters.sourceType}
         onChange={(e) => onChange({ sourceType: e.target.value as CatalogFilters["sourceType"] })}
         aria-label="Filter by source type"

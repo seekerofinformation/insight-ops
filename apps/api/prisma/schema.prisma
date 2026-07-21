@@ -93,16 +93,33 @@ model Dataset {
   sensitivity DatasetSensitivity
   accessLevel DatasetAccessLevel
   tags        String[]
+  searchText  String
   updatedAt   DateTime
   columns     DatasetColumn[]
   quality     DatasetQuality?
+  records     DatasetRecord[]
 
   @@index([updatedAt])
+  @@index([domain])
+  @@index([sourceType])
+  @@index([accessLevel])
+  @@index([qualityScore])
+}
+
+model DatasetRecord {
+  id        String  @id @default(cuid())
+  datasetId String
+  ordinal   Int
+  data      Json
+  dataset   Dataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  @@unique([datasetId, ordinal])
 }
 
 model DatasetColumn {
   id          String     @id @default(cuid())
   datasetId   String
+  ordinal     Int
   name        String
   type        ColumnType
   nullable    Boolean
@@ -110,6 +127,7 @@ model DatasetColumn {
   dataset     Dataset    @relation(fields: [datasetId], references: [id], onDelete: Cascade)
 
   @@unique([datasetId, name])
+  @@unique([datasetId, ordinal])
 }
 
 model DatasetQuality {

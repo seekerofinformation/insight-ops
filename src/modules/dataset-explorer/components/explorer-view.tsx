@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button, DataQualityBadge, ErrorState, PageHeader, Skeleton } from "@/shared/ui";
@@ -27,6 +27,11 @@ export function ExplorerView({ datasetId }: { datasetId: string }) {
   const schema = useDatasetSchema(datasetId);
   const quality = useDatasetQuality(datasetId);
   const rows = useDatasetRows(datasetId);
+  const loadedRows = useMemo(
+    () => rows.data?.pages.flatMap((page) => page.data) ?? [],
+    [rows.data],
+  );
+  const totalRows = rows.data?.pages[0]?.meta.total ?? 0;
 
   const [quickFilter, setQuickFilter] = useState("");
   const pushFilter = useDebouncedCallback(setQuickFilter, 250);
@@ -71,8 +76,19 @@ export function ExplorerView({ datasetId }: { datasetId: string }) {
         />
         {rows.data && (
           <p className="text-muted text-xs tabular-nums">
-            Rows loaded: {formatNumber(rows.data.length)} · Render mode: virtualized
+            Rows loaded: {formatNumber(loadedRows.length)} of {formatNumber(totalRows)} · Render
+            mode: virtualized
           </p>
+        )}
+        {rows.hasNextPage && (
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={rows.isFetchingNextPage}
+            onClick={() => rows.fetchNextPage()}
+          >
+            {rows.isFetchingNextPage ? "Loading…" : "Load more rows"}
+          </Button>
         )}
       </div>
 
@@ -80,10 +96,19 @@ export function ExplorerView({ datasetId }: { datasetId: string }) {
         <div className="min-h-96">
           {rows.isPending || !schema.data ? (
             <Skeleton className="h-full min-h-96 w-full" />
+          ) : rows.isError ? (
+            <ErrorState
+              title="Failed to load dataset rows"
+              action={
+                <Button variant="secondary" onClick={() => rows.refetch()}>
+                  Retry
+                </Button>
+              }
+            />
           ) : (
             <ExplorerGrid
               schema={schema.data}
-              rows={rows.data ?? []}
+              rows={loadedRows}
               quickFilter={quickFilter}
               onExportCsv={(fn) => {
                 exportRef.current = fn;

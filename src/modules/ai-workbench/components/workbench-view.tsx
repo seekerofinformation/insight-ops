@@ -21,7 +21,8 @@ const EXAMPLE_PROMPT =
   "Show districts with the highest number of critical incidents in the last 24 hours.";
 
 export function WorkbenchView() {
-  const { data: datasets } = useDatasets();
+  const { data: datasetPage } = useDatasets();
+  const datasets = datasetPage?.data;
   const [datasetId, setDatasetId] = useState<string | null>(null);
   const activeId = datasetId ?? datasets?.[0]?.id ?? null;
 

@@ -4,6 +4,7 @@ import {
   MOCK_PIPELINES,
   MOCK_QUALITY,
   MOCK_SCHEMAS,
+  generateRows,
   getMockAlerts,
 } from "@insightops/fixtures";
 import {
@@ -19,8 +20,9 @@ import {
   PipelineStatus,
   type Prisma,
 } from "../src/generated/prisma/client.js";
+import type { prisma as PrismaClientInstance } from "../src/prisma.js";
 
-let prismaClient: (typeof import("../src/prisma.js"))["prisma"] | undefined;
+let prismaClient: typeof PrismaClientInstance | undefined;
 
 const datasetDomain = {
   "Smart City": DatasetDomain.SMART_CITY,
@@ -85,6 +87,7 @@ const alertStatus = {
   acknowledged: AlertStatus.ACKNOWLEDGED,
   resolved: AlertStatus.RESOLVED,
 } as const;
+const SEEDED_ROWS_PER_DATASET = 500;
 
 async function main() {
   if (process.env.NODE_ENV === "production" || process.env.ALLOW_DATABASE_SEED !== "true") {
@@ -129,15 +132,26 @@ async function main() {
             sensitivity: datasetSensitivity[dataset.sensitivity],
             accessLevel: datasetAccessLevel[dataset.accessLevel],
             tags: dataset.tags,
+            searchText:
+              `${dataset.name} ${dataset.description} ${dataset.owner} ${dataset.tags.join(" ")}`.toLowerCase(),
             updatedAt: new Date(dataset.updatedAt),
             columns: {
-              create: schema.columns.map((column) => ({
+              create: schema.columns.map((column, ordinal) => ({
                 ...column,
+                ordinal,
                 type: columnType[column.type],
               })),
             },
             quality: { create: qualityData },
           },
+        });
+
+        await transaction.datasetRecord.createMany({
+          data: generateRows(schema, SEEDED_ROWS_PER_DATASET).map((data, ordinal) => ({
+            datasetId: dataset.id,
+            ordinal,
+            data: data as Prisma.InputJsonObject,
+          })),
         });
       }
 
@@ -181,7 +195,7 @@ async function main() {
         })),
       });
     },
-    { maxWait: 5_000, timeout: 30_000 },
+    { maxWait: 5_000, timeout: 60_000 },
   );
 
   console.info(
@@ -190,6 +204,7 @@ async function main() {
       datasets: MOCK_DATASETS.length,
       pipelines: MOCK_PIPELINES.length,
       alerts: alerts.length,
+      datasetRecords: MOCK_DATASETS.length * SEEDED_ROWS_PER_DATASET,
     }),
   );
 }

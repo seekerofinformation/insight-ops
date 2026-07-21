@@ -2,12 +2,47 @@ import { z } from "zod";
 import {
   alertSchema,
   dataQualityMetricsSchema,
+  datasetAccessLevelSchema,
+  datasetDomainSchema,
   datasetSchema,
+  datasetSourceTypeSchema,
   datasetStructureSchema,
   pipelineSchema,
 } from "./domain.js";
 
-export const listDatasetsResponseSchema = z.object({ data: z.array(datasetSchema) });
+export const paginationMetaSchema = z.object({
+  page: z.number().int().positive(),
+  pageSize: z.number().int().positive(),
+  total: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+});
+export const listDatasetsQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(10_000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    q: z.string().trim().max(200).optional(),
+    domain: datasetDomainSchema.optional(),
+    sourceType: datasetSourceTypeSchema.optional(),
+    accessLevel: datasetAccessLevelSchema.optional(),
+    minQuality: z.coerce.number().min(0).max(100).optional(),
+    sortBy: z.enum(["name", "updatedAt", "qualityScore", "rowCount"]).default("updatedAt"),
+    sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  })
+  .strict();
+export const listDatasetsResponseSchema = z.object({
+  data: z.array(datasetSchema),
+  meta: paginationMetaSchema,
+});
+export const datasetIdParamsSchema = z
+  .object({
+    datasetId: z
+      .string()
+      .trim()
+      .min(1)
+      .max(128)
+      .regex(/^[a-z0-9][a-z0-9-]*$/),
+  })
+  .strict();
 export const getDatasetResponseSchema = z.object({ data: datasetSchema });
 export const getDatasetSchemaResponseSchema = z.object({ data: datasetStructureSchema });
 export const getDatasetQualityResponseSchema = z.object({ data: dataQualityMetricsSchema });
@@ -36,10 +71,17 @@ export const datasetRowSchema = z.record(
   z.string(),
   z.union([z.string(), z.number(), z.boolean(), z.null()]),
 );
-export const listDatasetRowsQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100_000).default(30_000),
+export const listDatasetRowsQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(10_000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(500).default(100),
+    sortOrder: z.enum(["asc", "desc"]).default("asc"),
+  })
+  .strict();
+export const listDatasetRowsResponseSchema = z.object({
+  data: z.array(datasetRowSchema),
+  meta: paginationMetaSchema,
 });
-export const listDatasetRowsResponseSchema = z.object({ data: z.array(datasetRowSchema) });
 export const aiDatasetContextSchema = z.object({
   dataset: datasetSchema,
   schema: datasetStructureSchema,
@@ -65,6 +107,9 @@ export const explainDatasetResponseSchema = z.object({
 });
 
 export type ListDatasetsResponse = z.infer<typeof listDatasetsResponseSchema>;
+export type ListDatasetsQuery = z.infer<typeof listDatasetsQuerySchema>;
+export type DatasetIdParams = z.infer<typeof datasetIdParamsSchema>;
+export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
 export type GetDatasetResponse = z.infer<typeof getDatasetResponseSchema>;
 export type GetDatasetSchemaResponse = z.infer<typeof getDatasetSchemaResponseSchema>;
 export type GetDatasetQualityResponse = z.infer<typeof getDatasetQualityResponseSchema>;

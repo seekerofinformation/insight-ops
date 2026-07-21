@@ -93,6 +93,10 @@ PostgreSQL initialization scripts only run for a new data volume. If the disposa
 
 `GET /health/live` reports process liveness. `GET /health/ready` checks the PostgreSQL connection and returns `503` until the database is available. JSON request logs include the Fastify request ID; callers may provide one through `X-Request-Id`.
 
+The dataset vertical slice is available under `/v1/datasets`: catalog listing supports bounded page/page-size pagination, search, domain/source/access/quality filters and stable sorting; detail, schema, quality and paginated sample-row endpoints share runtime-validated contracts from `packages/contracts`. The frontend validates every backend response before exposing it to React Query.
+
+`NEXT_PUBLIC_DATA_SOURCE` controls the frontend adapter: `api` requires the backend, `mock` is fully offline, and `fallback` uses mocks only for network or server (`5xx`) failures. Client and authorization errors are never hidden by fallback. `NEXT_PUBLIC_API_BASE_URL` is a build-time browser URL and must therefore be configured before building the frontend image.
+
 For local Prisma work, set the host-side `DATABASE_URL`, then use:
 
 ```bash
