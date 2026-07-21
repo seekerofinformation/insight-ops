@@ -3,8 +3,7 @@
 import { useMemo, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry, themeQuartz } from "ag-grid-community";
-import type { DatasetSchema } from "@/shared/types";
-import type { DatasetRow } from "@/shared/lib/mock-data";
+import type { DatasetRow, DatasetSchema } from "@insightops/contracts";
 import { buildColumnDefs } from "../model/column-defs";
 
 ModuleRegistry.registerModules([AllCommunityModule]);

@@ -1,18 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
 import { Button, EmptyState, ErrorState, PageHeader, Skeleton } from "@/shared/ui";
 import { useDatasets } from "../hooks/use-datasets";
 import { useCatalogFilters } from "../hooks/use-catalog-filters";
-import { applyFilters } from "../model/filters";
 import { DatasetCard } from "./dataset-card";
 import { CatalogFiltersPanel } from "./catalog-filters";
 
 export function CatalogView() {
-  const { data, isPending, isError, refetch } = useDatasets();
   const { filters, setFilters, resetFilters } = useCatalogFilters();
-
-  const filtered = useMemo(() => (data ? applyFilters(data, filters) : []), [data, filters]);
+  const { data, isPending, isError, isFetching, refetch } = useDatasets(filters);
 
   return (
     <div className="space-y-6">
@@ -38,7 +34,7 @@ export function CatalogView() {
             <Skeleton key={i} className="h-48 w-full" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !data || data.data.length === 0 ? (
         <EmptyState
           title="No datasets found"
           description="Try adjusting the filters or clearing the search query."
@@ -51,13 +47,37 @@ export function CatalogView() {
       ) : (
         <>
           <p className="text-muted text-xs">
-            {filtered.length} of {data.length} datasets
+            Showing {data.data.length} of {data.meta.total} datasets
+            {isFetching ? " · Updating…" : ""}
           </p>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-            {filtered.map((dataset) => (
+            {data.data.map((dataset) => (
               <DatasetCard key={dataset.id} dataset={dataset} />
             ))}
           </div>
+          {data.meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={filters.page <= 1}
+                onClick={() => setFilters({ page: filters.page - 1 })}
+              >
+                Previous
+              </Button>
+              <span className="text-muted text-xs tabular-nums">
+                Page {data.meta.page} of {data.meta.totalPages}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={filters.page >= data.meta.totalPages}
+                onClick={() => setFilters({ page: filters.page + 1 })}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </>
       )}
     </div>

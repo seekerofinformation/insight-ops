@@ -9,6 +9,16 @@ paths:
   /datasets:
     get:
       summary: List datasets
+      parameters:
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/DatasetPageSize" }
+        - { $ref: "#/components/parameters/DatasetSearch" }
+        - { $ref: "#/components/parameters/DatasetDomain" }
+        - { $ref: "#/components/parameters/DatasetSourceType" }
+        - { $ref: "#/components/parameters/DatasetAccessLevel" }
+        - { $ref: "#/components/parameters/MinimumQuality" }
+        - { $ref: "#/components/parameters/DatasetSortBy" }
+        - { $ref: "#/components/parameters/SortOrder" }
       responses:
         "200": { $ref: "#/components/responses/Datasets" }
         default: { $ref: "#/components/responses/ApiError" }
@@ -38,13 +48,9 @@ paths:
     get:
       summary: List dataset rows
       parameters:
-        [
-          {
-            name: limit,
-            in: query,
-            schema: { type: integer, minimum: 1, maximum: 100000, default: 30000 },
-          },
-        ]
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/RowsPageSize" }
+        - { $ref: "#/components/parameters/RowsSortOrder" }
       responses:
         "200": { $ref: "#/components/responses/Rows" }
         default: { $ref: "#/components/responses/ApiError" }
@@ -99,6 +105,48 @@ paths:
 components:
   parameters:
     DatasetId: { name: datasetId, in: path, required: true, schema: { type: string } }
+    Page:
+      { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 10000, default: 1 } }
+    DatasetPageSize:
+      {
+        name: pageSize,
+        in: query,
+        schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+      }
+    RowsPageSize:
+      {
+        name: pageSize,
+        in: query,
+        schema: { type: integer, minimum: 1, maximum: 500, default: 100 },
+      }
+    DatasetSearch: { name: q, in: query, schema: { type: string, maxLength: 200 } }
+    DatasetDomain:
+      {
+        name: domain,
+        in: query,
+        schema: { type: string, enum: [Smart City, Energy, Finance, Public Safety, IoT] },
+      }
+    DatasetSourceType:
+      {
+        name: sourceType,
+        in: query,
+        schema: { type: string, enum: [API, CSV, Database, Stream, Data Lake] },
+      }
+    DatasetAccessLevel:
+      { name: accessLevel, in: query, schema: { type: string, enum: [Open, Restricted, Private] } }
+    MinimumQuality:
+      { name: minQuality, in: query, schema: { type: number, minimum: 0, maximum: 100 } }
+    DatasetSortBy:
+      {
+        name: sortBy,
+        in: query,
+        schema:
+          { type: string, enum: [name, updatedAt, qualityScore, rowCount], default: updatedAt },
+      }
+    SortOrder:
+      { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: desc } }
+    RowsSortOrder:
+      { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
   headers:
     RequestId:
       { description: Opaque request correlation UUID, schema: { type: string, format: uuid } }
@@ -176,8 +224,12 @@ components:
     DatasetListResponse:
       {
         type: object,
-        required: [data],
-        properties: { data: { type: array, items: { $ref: "#/components/schemas/Dataset" } } },
+        required: [data, meta],
+        properties:
+          {
+            data: { type: array, items: { $ref: "#/components/schemas/Dataset" } },
+            meta: { $ref: "#/components/schemas/PaginationMeta" },
+          },
       }
     DatasetResponse:
       {
@@ -200,9 +252,34 @@ components:
     RowsResponse:
       {
         type: object,
-        required: [data],
-        properties: { data: { type: array, items: { type: object, additionalProperties: true } } },
+        required: [data, meta],
+        properties:
+          {
+            data:
+              {
+                type: array,
+                items:
+                  {
+                    type: object,
+                    additionalProperties:
+                      {
+                        oneOf:
+                          [{ type: string }, { type: number }, { type: boolean }, { type: "null" }],
+                      },
+                  },
+              },
+            meta: { $ref: "#/components/schemas/PaginationMeta" },
+          },
       }
+    PaginationMeta:
+      type: object
+      additionalProperties: false
+      required: [page, pageSize, total, totalPages]
+      properties:
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        total: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
     PipelineListResponse:
       {
         type: object,

@@ -7,6 +7,9 @@ export interface CatalogFilters {
   accessLevel: DatasetAccessLevel | "all";
   /** Minimum quality score, 0 = no filter */
   minQuality: number;
+  page: number;
+  sortBy: "name" | "updatedAt" | "qualityScore" | "rowCount";
+  sortOrder: "asc" | "desc";
 }
 
 export const DEFAULT_FILTERS: CatalogFilters = {
@@ -15,6 +18,9 @@ export const DEFAULT_FILTERS: CatalogFilters = {
   sourceType: "all",
   accessLevel: "all",
   minQuality: 0,
+  page: 1,
+  sortBy: "updatedAt",
+  sortOrder: "desc",
 };
 
 export const DOMAIN_OPTIONS: DatasetDomain[] = [
